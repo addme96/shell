@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 func Test_printProperMessage(t *testing.T) {
@@ -83,31 +85,59 @@ func Test_readConfig(t *testing.T) {
 	}
 }
 
-//
-//func Test_tickClock(t *testing.T) {
-//	type args struct {
-//		messages *Messages
-//		locking  *Locking
-//		duration time.Duration
-//	}
-//	tests := []struct {
-//		name       string
-//		args       args
-//		wantWriter string
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			writer := &bytes.Buffer{}
-//			tickClock(tt.args.messages, tt.args.locking, writer, tt.args.duration)
-//			if gotWriter := writer.String(); gotWriter != tt.wantWriter {
-//				t.Errorf("tickClock() = %v, want %v", gotWriter, tt.wantWriter)
-//			}
-//		})
-//	}
-//}
-//
+func Test_tickClock(t *testing.T) {
+	tickInterval := time.Second * 0
+	messages := Messages{
+		secMsg:  "tick",
+		minMsg:  "tock",
+		hourMsg: "bong",
+	}
+	locking = Locking{
+		wg:       sync.WaitGroup{},
+		mutex:    sync.Mutex{},
+		finished: false,
+	}
+
+	tests := []struct {
+		name           string
+		duration       time.Duration
+		expectedOutput string
+	}{
+		{"1 hour", time.Hour, getExpectedOutput(3600, &messages)},
+		{"2 hours", time.Hour * 2, getExpectedOutput(3600*2, &messages)},
+		{"3 hours", time.Hour * 3, getExpectedOutput(3600*3, &messages)},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// arrange
+			buf := &bytes.Buffer{}
+			locking.wg.Add(1)
+
+			// act
+			tickClock(&messages, &locking, buf, tt.duration, tickInterval)
+
+			// assert
+			assert.Equal(t, tt.expectedOutput, buf.String())
+
+		})
+	}
+}
+
+func getExpectedOutput(seconds int, messages *Messages) string {
+	var sb strings.Builder
+	for i := 1; i <= seconds; i++ {
+		if i%3600 == 0 {
+			sb.WriteString((*messages).hourMsg + "\n")
+		} else if i%60 == 0 {
+			sb.WriteString((*messages).minMsg + "\n")
+		} else {
+			sb.WriteString((*messages).secMsg + "\n")
+		}
+	}
+	return sb.String()
+}
+
 //func Test_updateConf(t *testing.T) {
 //	type args struct {
 //		messages *Messages

@@ -24,6 +24,7 @@ type Locking struct {
 
 var (
 	clockWorkingDuration       = time.Hour * 3
+	tickInterval               = time.Second
 	confFileName               = "file.conf"
 	updateConfIntervalDuration = time.Second * 2
 	messages                   = Messages{
@@ -41,7 +42,7 @@ var (
 func main() {
 	writer := os.Stdout
 	locking.wg.Add(1)
-	go tickClock(&messages, &locking, writer, clockWorkingDuration)
+	go tickClock(&messages, &locking, writer, clockWorkingDuration, tickInterval)
 	locking.wg.Add(1)
 	go updateConf(&messages, &locking, confFileName, updateConfIntervalDuration)
 	locking.wg.Wait()
@@ -51,10 +52,12 @@ func tickClock(
 	messages *Messages,
 	locking *Locking,
 	writer io.Writer,
-	duration time.Duration) {
+	duration time.Duration,
+	tickInterval time.Duration) {
 	durationsSeconds := int(duration / time.Second)
 	for i := 1; i <= durationsSeconds; i++ {
-		time.Sleep(time.Second)
+
+		time.Sleep(tickInterval)
 		locking.mutex.Lock()
 		printProperMessage(messages, i, writer)
 		locking.mutex.Unlock()
