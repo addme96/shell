@@ -27,6 +27,7 @@ var (
 	tickInterval               = time.Second
 	confFileName               = "file.conf"
 	updateConfIntervalDuration = time.Second * 2
+	infinity                   = time.Hour * 24 * 365 * 290
 	messages                   = Messages{
 		secMsg:  "tick",
 		minMsg:  "tock",
@@ -44,7 +45,7 @@ func main() {
 	locking.wg.Add(1)
 	go tickClock(&messages, &locking, writer, clockWorkingDuration, tickInterval)
 	locking.wg.Add(1)
-	go updateConf(&messages, &locking, confFileName, updateConfIntervalDuration)
+	go updateConf(&messages, &locking, confFileName, updateConfIntervalDuration, infinity)
 	locking.wg.Wait()
 }
 
@@ -83,8 +84,15 @@ func updateConf(
 	messages *Messages,
 	locking *Locking,
 	filename string,
-	interval time.Duration) {
+	interval time.Duration,
+	checkPeriod time.Duration) {
+	stopTime := time.Now().Local().Add(checkPeriod)
+
 	for {
+		now := time.Now()
+		if now.After(stopTime) {
+			break
+		}
 		(*locking).mutex.Lock()
 		clockFinished := (*locking).finished
 		(*locking).mutex.Unlock()

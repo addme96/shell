@@ -87,7 +87,7 @@ func Test_readConfig(t *testing.T) {
 
 func Test_tickClock(t *testing.T) {
 	tickInterval := time.Second * 0
-	messages := Messages{
+	messages = Messages{
 		secMsg:  "tick",
 		minMsg:  "tock",
 		hourMsg: "bong",
@@ -126,33 +126,42 @@ func Test_tickClock(t *testing.T) {
 
 func getExpectedOutput(seconds int, messages *Messages) string {
 	var sb strings.Builder
+	hourMsg := (*messages).hourMsg + "\n"
+	minMsg := (*messages).minMsg + "\n"
+	secMsg := (*messages).secMsg + "\n"
 	for i := 1; i <= seconds; i++ {
 		if i%3600 == 0 {
-			sb.WriteString((*messages).hourMsg + "\n")
+			sb.WriteString(hourMsg)
 		} else if i%60 == 0 {
-			sb.WriteString((*messages).minMsg + "\n")
+			sb.WriteString(minMsg)
 		} else {
-			sb.WriteString((*messages).secMsg + "\n")
+			sb.WriteString(secMsg)
 		}
 	}
 	return sb.String()
 }
 
-//func Test_updateConf(t *testing.T) {
-//	type args struct {
-//		messages *Messages
-//		locking  *Locking
-//		filename string
-//		interval time.Duration
-//	}
-//	tests := []struct {
-//		name string
-//		args args
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//		})
-//	}
-//}
+func Test_updateConf(t *testing.T) {
+	// arrange
+	messages = Messages{
+		secMsg:  "tick",
+		minMsg:  "tock",
+		hourMsg: "bong",
+	}
+	locking = Locking{
+		wg:       sync.WaitGroup{},
+		mutex:    sync.Mutex{},
+		finished: false,
+	}
+	filename := "test_data/file.conf"
+	interval := time.Second * 0
+	checkPeriod := time.Millisecond * 500
+	locking.wg.Add(1)
+
+	// act
+	updateConf(&messages, &locking, filename, interval, checkPeriod)
+	// assert
+	assert.Equal(t, "tic", messages.secMsg)
+	assert.Equal(t, "tac", messages.minMsg)
+	assert.Equal(t, "toe", messages.hourMsg)
+}
