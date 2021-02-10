@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	"path"
 	"strings"
 	"sync"
 	"testing"
@@ -153,7 +154,7 @@ func Test_updateConf(t *testing.T) {
 		mutex:    sync.Mutex{},
 		finished: false,
 	}
-	filename := "test_data/file.conf"
+	filename := path.Join("test_data", "file.conf")
 	interval := time.Second * 0
 	checkPeriod := time.Millisecond * 500
 	locking.wg.Add(1)
