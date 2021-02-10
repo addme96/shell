@@ -57,7 +57,6 @@ func tickClock(
 	tickInterval time.Duration) {
 	durationsSeconds := int(duration / time.Second)
 	for i := 1; i <= durationsSeconds; i++ {
-
 		time.Sleep(tickInterval)
 		locking.mutex.Lock()
 		printProperMessage(messages, i, writer)
@@ -100,7 +99,6 @@ func updateConf(
 			break
 		}
 		time.Sleep(interval)
-
 		file, err := os.Open(filename)
 		if err != nil {
 			log.Fatal(err)
