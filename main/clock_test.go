@@ -84,7 +84,7 @@ func TestClock_determineProperMessage(t *testing.T) {
 	}
 }
 
-func TestClock_tickClock(t *testing.T) {
+func TestClock_tick(t *testing.T) {
 	tickInterval := time.Second * 0
 	messages = Messages{
 		secMsg:  "tick",
@@ -119,7 +119,7 @@ func TestClock_tickClock(t *testing.T) {
 				duration:     tt.duration,
 				tickInterval: tickInterval}
 			// act
-			c.tickClock()
+			c.tick()
 			// assert
 			assert.Equal(t, tt.expectedOutput, buf.String())
 

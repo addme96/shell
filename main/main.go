@@ -34,7 +34,7 @@ func main() {
 		duration:     clockWorkingDuration,
 		tickInterval: tickInterval,
 	}
-	go c.tickClock()
+	go c.tick()
 	locking.wg.Add(1)
 	go updateConf(&messages, &locking, confFileName, updateConfIntervalDuration, infinity)
 	locking.wg.Wait()

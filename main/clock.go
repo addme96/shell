@@ -14,7 +14,7 @@ type Clock struct {
 	tickInterval time.Duration
 }
 
-func (c *Clock) tickClock() {
+func (c *Clock) tick() {
 	durationsSeconds := int(c.duration / time.Second)
 	for i := 1; i <= durationsSeconds; i++ {
 		time.Sleep(c.tickInterval)
