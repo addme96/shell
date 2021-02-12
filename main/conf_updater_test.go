@@ -69,6 +69,7 @@ func TestConfUpdater_updateConf(t *testing.T) {
 	})
 	t.Run("clock has finished", func(t *testing.T) {
 		// arrange
+		oldMessages := messages
 		locking = Locking{
 			wg:       sync.WaitGroup{},
 			mutex:    sync.Mutex{},
@@ -91,5 +92,8 @@ func TestConfUpdater_updateConf(t *testing.T) {
 		assert.Equal(t, "tick", messages.secMsg)
 		assert.Equal(t, "tock", messages.minMsg)
 		assert.Equal(t, "bong", messages.hourMsg)
+
+		// cleanup
+		messages = oldMessages
 	})
 }
