@@ -15,21 +15,23 @@ type Clock struct {
 }
 
 func (c *Clock) tick() {
+	defer (*c.locking).wg.Done()
 	durationsSeconds := int(c.duration / time.Second)
 	for i := 1; i <= durationsSeconds; i++ {
 		time.Sleep(c.tickInterval)
 		c.printProperMessages(i)
 	}
 	(*c.locking).mutex.Lock()
+	defer (*c.locking).mutex.Unlock()
 	(*c.locking).finished = true
-	(*c.locking).mutex.Unlock()
-	(*c.locking).wg.Done()
+
 }
 
 func (c *Clock) printProperMessages(secondsElapsed int) {
 	c.locking.mutex.Lock()
+	defer c.locking.mutex.Unlock()
 	msg := c.determineProperMessage(secondsElapsed)
-	c.locking.mutex.Unlock()
+
 	_, _ = fmt.Fprintln(c.writer, msg)
 }
 

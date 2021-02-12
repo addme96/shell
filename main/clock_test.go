@@ -32,8 +32,8 @@ func TestClock_printProperMessage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// arrange
 			buf := bytes.Buffer{}
-			// act
 			c := &Clock{messages: &messages, locking: &locking, writer: &buf}
+			// act
 			c.printProperMessages(tt.elapsedSeconds)
 			// assert
 			assert.Equal(t, tt.expected, buf.String())
