@@ -18,13 +18,7 @@ type ConfUpdater struct {
 
 func (c *ConfUpdater) updateConf() {
 	stopTime := time.Now().Local().Add(c.checkPeriod)
-	for !time.Now().After(stopTime) {
-		(*c.locking).mutex.Lock()
-		clockFinished := (*c.locking).finished
-		(*c.locking).mutex.Unlock()
-		if clockFinished {
-			break
-		}
+	for !time.Now().After(stopTime) && !c.hasClockFinished() {
 		time.Sleep(c.interval)
 		file, err := os.Open(c.filename)
 		if err != nil {
@@ -37,6 +31,13 @@ func (c *ConfUpdater) updateConf() {
 		(*c.locking).mutex.Unlock()
 	}
 	(*c.locking).wg.Done()
+}
+
+func (c *ConfUpdater) hasClockFinished() bool {
+	(*c.locking).mutex.Lock()
+	defer (*c.locking).mutex.Unlock()
+	clockFinished := (*c.locking).finished
+	return clockFinished
 }
 
 func (c *ConfUpdater) readConfig(reader io.Reader) Messages {

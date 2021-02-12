@@ -39,26 +39,57 @@ func TestConfUpdater_readConfig(t *testing.T) {
 }
 
 func TestConfUpdater_updateConf(t *testing.T) {
-	// arrange
-	locking = Locking{
-		wg:       sync.WaitGroup{},
-		mutex:    sync.Mutex{},
-		finished: false,
-	}
-	locking.wg.Add(1)
-	filename := path.Join("test_data", "file.conf")
-	interval := time.Second * 0
-	checkPeriod := time.Millisecond * 500
-	cu := &ConfUpdater{
-		messages:    &messages,
-		locking:     &locking,
-		filename:    filename,
-		interval:    interval,
-		checkPeriod: checkPeriod}
-	// act
-	cu.updateConf()
-	// assert
-	assert.Equal(t, "tic", messages.secMsg)
-	assert.Equal(t, "tac", messages.minMsg)
-	assert.Equal(t, "toe", messages.hourMsg)
+	t.Run("clock is working", func(t *testing.T) {
+		// arrange
+		oldMessages := messages
+		locking = Locking{
+			wg:       sync.WaitGroup{},
+			mutex:    sync.Mutex{},
+			finished: false,
+		}
+		locking.wg.Add(1)
+		filename := path.Join("test_data", "file.conf")
+		interval := time.Second * 0
+		checkPeriod := time.Millisecond * 500
+		cu := &ConfUpdater{
+			messages:    &messages,
+			locking:     &locking,
+			filename:    filename,
+			interval:    interval,
+			checkPeriod: checkPeriod}
+		// act
+		cu.updateConf()
+		// assert
+		assert.Equal(t, "tic", messages.secMsg)
+		assert.Equal(t, "tac", messages.minMsg)
+		assert.Equal(t, "toe", messages.hourMsg)
+
+		// cleanup
+		messages = oldMessages
+	})
+	t.Run("clock has finished", func(t *testing.T) {
+		// arrange
+		locking = Locking{
+			wg:       sync.WaitGroup{},
+			mutex:    sync.Mutex{},
+			finished: true,
+		}
+		locking.wg.Add(1)
+		filename := path.Join("test_data", "file.conf")
+		interval := time.Second * 0
+		checkPeriod := time.Millisecond * 500
+		cu := &ConfUpdater{
+			messages:    &messages,
+			locking:     &locking,
+			filename:    filename,
+			interval:    interval,
+			checkPeriod: checkPeriod,
+		}
+		// act
+		cu.updateConf()
+		// assert
+		assert.Equal(t, "tick", messages.secMsg)
+		assert.Equal(t, "tock", messages.minMsg)
+		assert.Equal(t, "bong", messages.hourMsg)
+	})
 }
