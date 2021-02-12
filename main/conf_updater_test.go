@@ -39,49 +39,49 @@ func TestConfUpdater_readConfig(t *testing.T) {
 }
 
 func TestConfUpdater_updateConf(t *testing.T) {
+	testMessages := Messages{
+		secMsg:  "tick",
+		minMsg:  "tock",
+		hourMsg: "bong",
+	}
+	filename := path.Join("test_data", "file.conf")
+	interval := time.Second * 0
+	checkPeriod := time.Millisecond * 500
+
 	t.Run("clock is working", func(t *testing.T) {
 		// arrange
-		oldMessages := messages
-		locking = Locking{
+		testLocking = Locking{
 			wg:       sync.WaitGroup{},
 			mutex:    sync.Mutex{},
 			finished: false,
 		}
-		locking.wg.Add(1)
-		filename := path.Join("test_data", "file.conf")
-		interval := time.Second * 0
-		checkPeriod := time.Millisecond * 500
+		testLocking.wg.Add(1)
+
 		cu := &ConfUpdater{
-			messages:    &messages,
-			locking:     &locking,
+			messages:    &testMessages,
+			locking:     &testLocking,
 			filename:    filename,
 			interval:    interval,
 			checkPeriod: checkPeriod}
 		// act
 		cu.updateConf()
 		// assert
-		assert.Equal(t, "tic", messages.secMsg)
-		assert.Equal(t, "tac", messages.minMsg)
-		assert.Equal(t, "toe", messages.hourMsg)
-
+		assert.Equal(t, "tic", testMessages.secMsg)
+		assert.Equal(t, "tac", testMessages.minMsg)
+		assert.Equal(t, "toe", testMessages.hourMsg)
 		// cleanup
-		messages = oldMessages
 	})
 	t.Run("clock has finished", func(t *testing.T) {
 		// arrange
-		oldMessages := messages
-		locking = Locking{
+		testLocking = Locking{
 			wg:       sync.WaitGroup{},
 			mutex:    sync.Mutex{},
 			finished: true,
 		}
-		locking.wg.Add(1)
-		filename := path.Join("test_data", "file.conf")
-		interval := time.Second * 0
-		checkPeriod := time.Millisecond * 500
+		testLocking.wg.Add(1)
 		cu := &ConfUpdater{
-			messages:    &messages,
-			locking:     &locking,
+			messages:    &testMessages,
+			locking:     &testLocking,
 			filename:    filename,
 			interval:    interval,
 			checkPeriod: checkPeriod,
@@ -89,11 +89,41 @@ func TestConfUpdater_updateConf(t *testing.T) {
 		// act
 		cu.updateConf()
 		// assert
-		assert.Equal(t, "tick", messages.secMsg)
-		assert.Equal(t, "tock", messages.minMsg)
-		assert.Equal(t, "bong", messages.hourMsg)
+		assert.Equal(t, "tick", testMessages.secMsg)
+		assert.Equal(t, "tock", testMessages.minMsg)
+		assert.Equal(t, "bong", testMessages.hourMsg)
+	})
+}
 
-		// cleanup
-		messages = oldMessages
+func TestConfUpdater_hasClockFinished(t *testing.T) {
+	t.Run("clock is working", func(t *testing.T) {
+		// arrange
+		testLocking = Locking{
+			wg:       sync.WaitGroup{},
+			mutex:    sync.Mutex{},
+			finished: true,
+		}
+		cu := &ConfUpdater{
+			locking: &testLocking,
+		}
+		// act
+		finished := cu.hasClockFinished()
+		// assert
+		assert.Equal(t, true, finished)
+	})
+	t.Run("clock has finished", func(t *testing.T) {
+		// arrange
+		testLocking = Locking{
+			wg:       sync.WaitGroup{},
+			mutex:    sync.Mutex{},
+			finished: false,
+		}
+		cu := &ConfUpdater{
+			locking: &testLocking,
+		}
+		// act
+		finished := cu.hasClockFinished()
+		// assert
+		assert.Equal(t, false, finished)
 	})
 }

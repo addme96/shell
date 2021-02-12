@@ -32,7 +32,7 @@ func TestClock_printProperMessage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// arrange
 			buf := bytes.Buffer{}
-			c := &Clock{messages: &messages, locking: &locking, writer: &buf}
+			c := &Clock{messages: &messages, locking: &testLocking, writer: &buf}
 			// act
 			c.printProperMessages(tt.elapsedSeconds)
 			// assert
@@ -88,10 +88,10 @@ func TestClock_tick(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// arrange
 			buf := &bytes.Buffer{}
-			locking.wg.Add(1)
+			testLocking.wg.Add(1)
 			c := &Clock{
 				messages:     &messages,
-				locking:      &locking,
+				locking:      &testLocking,
 				writer:       buf,
 				duration:     tt.duration,
 				tickInterval: tickIntervalZero}

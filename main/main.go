@@ -18,7 +18,7 @@ var (
 		minMsg:  "tock",
 		hourMsg: "bong",
 	}
-	locking = Locking{
+	testLocking = Locking{
 		wg:       sync.WaitGroup{},
 		mutex:    sync.Mutex{},
 		finished: false,
@@ -28,20 +28,20 @@ var (
 func main() {
 	clock := &Clock{
 		messages:     &messages,
-		locking:      &locking,
+		locking:      &testLocking,
 		writer:       writer,
 		duration:     clockWorkingDuration,
 		tickInterval: tickInterval,
 	}
 	confUpdater := &ConfUpdater{
 		messages:    &messages,
-		locking:     &locking,
+		locking:     &testLocking,
 		filename:    confFileName,
 		interval:    updateConfInterval,
 		checkPeriod: infinity,
 	}
-	locking.wg.Add(2)
+	testLocking.wg.Add(2)
 	go clock.tick()
 	go confUpdater.updateConf()
-	locking.wg.Wait()
+	testLocking.wg.Wait()
 }
