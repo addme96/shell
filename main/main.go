@@ -7,12 +7,13 @@ import (
 )
 
 var (
-	clockWorkingDuration       = time.Hour * 3
-	tickInterval               = time.Second
-	confFileName               = "file.conf"
-	updateConfIntervalDuration = time.Second * 2
-	infinity                   = time.Hour * 24 * 365 * 290
-	messages                   = Messages{
+	clockWorkingDuration = time.Hour * 3
+	tickInterval         = time.Second
+	confFileName         = "file.conf"
+	updateConfInterval   = time.Second * 2
+	infinity             = time.Hour * 24 * 365 * 290
+	writer               = os.Stdout
+	messages             = Messages{
 		secMsg:  "tick",
 		minMsg:  "tock",
 		hourMsg: "bong",
@@ -25,17 +26,22 @@ var (
 )
 
 func main() {
-	writer := os.Stdout
-	locking.wg.Add(1)
-	c := &Clock{
+	clock := &Clock{
 		messages:     &messages,
 		locking:      &locking,
 		writer:       writer,
 		duration:     clockWorkingDuration,
 		tickInterval: tickInterval,
 	}
-	go c.tick()
-	locking.wg.Add(1)
-	go updateConf(&messages, &locking, confFileName, updateConfIntervalDuration, infinity)
+	confUpdater := &ConfUpdater{
+		messages:    &messages,
+		locking:     &locking,
+		filename:    confFileName,
+		interval:    updateConfInterval,
+		checkPeriod: infinity,
+	}
+	locking.wg.Add(2)
+	go clock.tick()
+	go confUpdater.updateConf()
 	locking.wg.Wait()
 }

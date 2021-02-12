@@ -30,7 +30,7 @@ func (c *Clock) printProperMessages(secondsElapsed int) {
 	c.locking.mutex.Lock()
 	msg := c.determineProperMessage(secondsElapsed)
 	c.locking.mutex.Unlock()
-	c.writeString(msg)
+	_, _ = fmt.Fprintln(c.writer, msg)
 }
 
 func (c *Clock) determineProperMessage(secondsElapsed int) string {
@@ -41,8 +41,4 @@ func (c *Clock) determineProperMessage(secondsElapsed int) string {
 	} else {
 		return (*c.messages).secMsg
 	}
-}
-
-func (c *Clock) writeString(s string) {
-	_, _ = fmt.Fprintln(c.writer, s)
 }

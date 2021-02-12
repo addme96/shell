@@ -4,18 +4,11 @@ import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 )
 
 func TestClock_printProperMessage(t *testing.T) {
-	messages := &Messages{
-		secMsg:  "tick",
-		minMsg:  "tock",
-		hourMsg: "bong",
-	}
-
 	expectedForSeconds := messages.secMsg + "\n"
 	expectedForMinutes := messages.minMsg + "\n"
 	expectedForHours := messages.hourMsg + "\n"
@@ -40,7 +33,7 @@ func TestClock_printProperMessage(t *testing.T) {
 			// arrange
 			buf := bytes.Buffer{}
 			// act
-			c := &Clock{messages: messages, locking: &locking, writer: &buf}
+			c := &Clock{messages: &messages, locking: &locking, writer: &buf}
 			c.printProperMessages(tt.elapsedSeconds)
 			// assert
 			assert.Equal(t, tt.expected, buf.String())
@@ -49,11 +42,6 @@ func TestClock_printProperMessage(t *testing.T) {
 }
 
 func TestClock_determineProperMessage(t *testing.T) {
-	messages := &Messages{
-		secMsg:  "tick",
-		minMsg:  "tock",
-		hourMsg: "bong",
-	}
 	tests := []struct {
 		name            string
 		elapsedSeconds  int
@@ -74,7 +62,7 @@ func TestClock_determineProperMessage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// arrange
 			c := &Clock{
-				messages: messages,
+				messages: &messages,
 			}
 			// act
 			actualMessage := c.determineProperMessage(tt.elapsedSeconds)
@@ -85,18 +73,7 @@ func TestClock_determineProperMessage(t *testing.T) {
 }
 
 func TestClock_tick(t *testing.T) {
-	tickInterval := time.Second * 0
-	messages = Messages{
-		secMsg:  "tick",
-		minMsg:  "tock",
-		hourMsg: "bong",
-	}
-	locking = Locking{
-		wg:       sync.WaitGroup{},
-		mutex:    sync.Mutex{},
-		finished: false,
-	}
-
+	tickIntervalZero := time.Second * 0
 	tests := []struct {
 		name           string
 		duration       time.Duration
@@ -117,7 +94,7 @@ func TestClock_tick(t *testing.T) {
 				locking:      &locking,
 				writer:       buf,
 				duration:     tt.duration,
-				tickInterval: tickInterval}
+				tickInterval: tickIntervalZero}
 			// act
 			c.tick()
 			// assert
@@ -128,10 +105,10 @@ func TestClock_tick(t *testing.T) {
 }
 
 func getExpectedOutput(seconds int, messages *Messages) string {
-	var sb strings.Builder
 	hourMsg := (*messages).hourMsg + "\n"
 	minMsg := (*messages).minMsg + "\n"
 	secMsg := (*messages).secMsg + "\n"
+	var sb strings.Builder
 	for i := 1; i <= seconds; i++ {
 		if i%3600 == 0 {
 			sb.WriteString(hourMsg)

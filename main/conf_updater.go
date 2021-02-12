@@ -8,40 +8,38 @@ import (
 	"time"
 )
 
-func updateConf(
-	messages *Messages,
-	locking *Locking,
-	filename string,
-	interval time.Duration,
-	checkPeriod time.Duration) {
-	stopTime := time.Now().Local().Add(checkPeriod)
+type ConfUpdater struct {
+	messages    *Messages
+	locking     *Locking
+	filename    string
+	interval    time.Duration
+	checkPeriod time.Duration
+}
 
-	for {
-		now := time.Now()
-		if now.After(stopTime) {
-			break
-		}
-		(*locking).mutex.Lock()
-		clockFinished := (*locking).finished
-		(*locking).mutex.Unlock()
+func (c *ConfUpdater) updateConf() {
+	stopTime := time.Now().Local().Add(c.checkPeriod)
+	for !time.Now().After(stopTime) {
+		(*c.locking).mutex.Lock()
+		clockFinished := (*c.locking).finished
+		(*c.locking).mutex.Unlock()
 		if clockFinished {
 			break
 		}
-		time.Sleep(interval)
-		file, err := os.Open(filename)
+		time.Sleep(c.interval)
+		file, err := os.Open(c.filename)
 		if err != nil {
 			log.Fatal(err)
 		}
-		newMessages := readConfig(file)
+		newMessages := c.readConfig(file)
 		_ = file.Close()
-		(*locking).mutex.Lock()
-		*messages = newMessages
-		(*locking).mutex.Unlock()
+		(*c.locking).mutex.Lock()
+		*c.messages = newMessages
+		(*c.locking).mutex.Unlock()
 	}
-	(*locking).wg.Done()
+	(*c.locking).wg.Done()
 }
 
-func readConfig(reader io.Reader) Messages {
+func (c *ConfUpdater) readConfig(reader io.Reader) Messages {
 	scanner := bufio.NewScanner(reader)
 	scanner.Scan()
 	secM := scanner.Text()
