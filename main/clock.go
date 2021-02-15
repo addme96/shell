@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"time"
 )
 
@@ -19,20 +20,21 @@ func (c *Clock) tick() {
 	durationsSeconds := int(c.duration / time.Second)
 	for i := 1; i <= durationsSeconds; i++ {
 		time.Sleep(c.tickInterval)
-		c.printProperMessages(i)
+		if err := c.printProperMessages(i); err != nil {
+			log.Fatal("Failed to print ticker message due to the following error: " + err.Error())
+		}
 	}
 	(*c.locking).mutex.Lock()
 	defer (*c.locking).mutex.Unlock()
 	(*c.locking).finished = true
-
 }
 
-func (c *Clock) printProperMessages(secondsElapsed int) {
+func (c *Clock) printProperMessages(secondsElapsed int) error {
 	c.locking.mutex.Lock()
 	defer c.locking.mutex.Unlock()
 	msg := c.determineProperMessage(secondsElapsed)
-
-	_, _ = fmt.Fprintln(c.writer, msg)
+	_, err := fmt.Fprintln(c.writer, msg)
+	return err
 }
 
 func (c *Clock) determineProperMessage(secondsElapsed int) string {

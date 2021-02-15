@@ -34,9 +34,10 @@ func TestClock_printProperMessage(t *testing.T) {
 			buf := bytes.Buffer{}
 			c := &Clock{messages: &messages, locking: &testLocking, writer: &buf}
 			// act
-			c.printProperMessages(tt.elapsedSeconds)
+			err := c.printProperMessages(tt.elapsedSeconds)
 			// assert
 			assert.Equal(t, tt.expected, buf.String())
+			assert.Nil(t, err)
 		})
 	}
 }
